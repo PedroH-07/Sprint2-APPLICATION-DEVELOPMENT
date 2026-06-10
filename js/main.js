@@ -1,36 +1,28 @@
-/* ============================================
-   GREENSENSE - Monitoramento da Mata Atlântica
-   APIs: Nominatim (OpenStreetMap) e Open-Meteo
-   ============================================ */
+// GREENSENSE - Monitoramento de Clima da Mata Atlântica
+// Integração com as APIs Nominatim (OpenStreetMap) e Open-Meteo
 
-// Aguarda o DOM carregar completamente antes de executar qualquer código
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Elementos do DOM
+    // Seleção dos elementos da interface
     var loadBtn = document.getElementById('loadBtn');
     var refreshBtn = document.getElementById('refreshBtn');
     var dashboardGrid = document.getElementById('dashboard-grid');
     var loadingIndicator = document.getElementById('loadingIndicator');
     var errorMessage = document.getElementById('errorMessage');
 
-    // Array para armazenar dados dos pontos monitorados
+    // Armazena os dados processados que serão exibidos nos cards
     var monitoredPoints = [];
 
-    // Event Listeners para botões
-    loadBtn.addEventListener('click', iniciarMonitoramento);
-    refreshBtn.addEventListener('click', atualizarDados);
+    // Vincula as ações do usuário aos botões
+    if (loadBtn) loadBtn.addEventListener('click', iniciarMonitoramento);
+    if (refreshBtn) refreshBtn.addEventListener('click', atualizarDados);
 
-    /* ============================================
-       Função: Iniciar Monitoramento
-       1. Busca pontos geográficos da Mata Atlântica
-       2. Obtém dados climáticos para cada ponto
-       3. Exibe no dashboard
-       ============================================ */
+    // Dispara o fluxo principal de coleta de dados
     function iniciarMonitoramento() {
         mostrarCarregamento(true);
         limparErros();
 
-        // Passo 1: Buscar pontos geográficos
+        // Busca a geolocalização dos parques para depois consultar o clima
         buscarPontosMatAtlantica(function(pontos) {
             if (pontos.length === 0) {
                 mostrarErro('Nenhum ponto encontrado. Tente novamente.');
@@ -38,79 +30,109 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Passo 2: Buscar dados climáticos para cada ponto
+            // Inicia a consulta climática a partir do primeiro ponto encontrado
             obterDadosDosPontos(pontos, 0);
         });
     }
 
-    /* ============================================
-       Função: Buscar Pontos via OpenStreetMap
-       Requisição para API Nominatim (gratuita)
-       ============================================ */
+    // Consulta o OpenStreetMap para obter latitude e longitude dos locais
     function buscarPontosMatAtlantica(callback) {
-        // URL da API Nominatim com busca por "forest" e "mata atlantica"
-        var url = 'https://nominatim.openstreetmap.org/search?q=forest+mata+atlantica&format=json&limit=15';
+        // Lista com margem de segurança. O script para assim que conseguir 10 pontos válidos.
+        var buscas = [
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+de+Itatiaia&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+da+Serra+dos+Orgaos&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Estadual+da+Serra+do+Mar&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+da+Tijuca&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+do+Iguacu&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Reserva+Biologica+de+Una&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Estadual+da+Cantareira&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+da+Serra+da+Bocaina&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+do+Caparao&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+do+Monte+Pascoal&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Estadual+Intervales&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Estadual+da+Serra+do+Tabuleiro&format=json&limit=1',
+            'https://nominatim.openstreetmap.org/search?q=Parque+Nacional+de+Superagui&format=json&limit=1'
+        ];
 
-        fetch(url)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(dados) {
-                // Filtrar apenas os 10 primeiros pontos com coordenadas válidas
-                var pontosFiltrados = [];
-                for (var i = 0; i < dados.length && pontosFiltrados.length < 10; i++) {
-                    if (dados[i].lat && dados[i].lon) {
-                        pontosFiltrados.push(dados[i]);
+        var pontosFiltrados = [];
+        var buscaAtual = 0;
+
+        // Processa as requisições sequencialmente para respeitar a política de uso da API
+        function executarBusca() {
+            if (pontosFiltrados.length >= 10 || buscaAtual >= buscas.length) {
+                callback(pontosFiltrados.slice(0, 10));
+                return;
+            }
+
+            fetch(buscas[buscaAtual])
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(dados) {
+                    // Valida o retorno e evita nomes duplicados na lista
+                    for (var i = 0; i < dados.length && pontosFiltrados.length < 10; i++) {
+                        if (dados[i].lat && dados[i].lon) {
+                            var jaTem = false;
+                            for (var j = 0; j < pontosFiltrados.length; j++) {
+                                if (pontosFiltrados[j].display_name === dados[i].display_name) {
+                                    jaTem = true;
+                                    break;
+                                }
+                            }
+                            if (!jaTem) {
+                                pontosFiltrados.push(dados[i]);
+                            }
+                        }
                     }
-                }
-                callback(pontosFiltrados);
-            })
-            .catch(function(erro) {
-                mostrarErro('Erro ao conectar com OpenStreetMap: ' + erro);
-                mostrarCarregamento(false);
-            });
+                    buscaAtual++;
+                    setTimeout(executarBusca, 1000); // Intervalo de 1 segundo entre as chamadas
+                })
+                .catch(function(erro) {
+                    console.warn('Falha na busca ' + buscaAtual + ', pulando para a próxima: ' + erro);
+                    buscaAtual++;
+                    setTimeout(executarBusca, 1000);
+                });
+        }
+
+        executarBusca();
     }
 
-    /* ============================================
-       Função: Obter Dados de Todos os Pontos
-       Processa cada ponto sequencialmente
-       ============================================ */
+    // Controla o fluxo de requisições climáticas de forma ordenada
     function obterDadosDosPontos(pontos, indiceAtual) {
-        // Se já processou todos os pontos, exibir dashboard
+        // Quando terminar de mapear todos os pontos, renderiza a interface
         if (indiceAtual >= pontos.length) {
             exibirDashboard(monitoredPoints);
             mostrarCarregamento(false);
-            loadBtn.style.display = 'none';
-            refreshBtn.style.display = 'inline-block';
+            if (loadBtn) loadBtn.style.display = 'none';
+            if (refreshBtn) refreshBtn.style.display = 'inline-block';
             return;
         }
 
         var pontoAtual = pontos[indiceAtual];
 
-        // Obter dados climáticos do ponto atual
         obterDadosClimaticos(parseFloat(pontoAtual.lat), parseFloat(pontoAtual.lon), function(clima) {
-            // FIX: lat/lon convertidos para número com parseFloat
-            // FIX: display_name usado como fallback para nome mais descritivo
-            monitoredPoints.push({
-                nome: pontoAtual.display_name || pontoAtual.name || 'Ponto sem nome',
-                lat: parseFloat(pontoAtual.lat),
-                lon: parseFloat(pontoAtual.lon),
-                clima: clima
-            });
+            if (clima !== null) {
+                // Limpa o nome do local pegando apenas o termo principal antes da primeira vírgula
+                var nomeCompleto = pontoAtual.display_name || pontoAtual.name || 'Ponto sem nome';
+                var nomeCurto = nomeCompleto.split(',')[0].trim();
+                
+                monitoredPoints.push({
+                    nome: nomeCurto,
+                    lat: parseFloat(pontoAtual.lat),
+                    lon: parseFloat(pontoAtual.lon),
+                    clima: clima
+                });
+            }
 
-            // Pequeno delay (500ms) para respeitar limite de requisições
+            // Pequena pausa para evitar sobrecarga de requisições simultâneas
             setTimeout(function() {
                 obterDadosDosPontos(pontos, indiceAtual + 1);
             }, 500);
         });
     }
 
-    /* ============================================
-       Função: Obter Dados Climáticos
-       Requisição para API Open-Meteo (gratuita)
-       ============================================ */
+    // Busca as condições meteorológicas em tempo real usando coordenadas aproximadas
     function obterDadosClimaticos(latitude, longitude, callback) {
-        // URL da API Open-Meteo com dados atuais
         var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + latitude + '&longitude=' + longitude +
                   '&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,uv_index&timezone=auto';
 
@@ -129,15 +151,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 callback(clima);
             })
             .catch(function(erro) {
-                mostrarErro('Erro ao obter dados climáticos: ' + erro);
+                mostrarErro('Erro ao obter dados climáticos (ponto ignorado): ' + erro);
+                callback(null);
             });
     }
 
-    /* ============================================
-       Função: Exibir Dashboard
-       Cria cards para todos os pontos monitorados
-       ============================================ */
+    // Limpa a grade e reconstrói todos os cards na tela
     function exibirDashboard(pontos) {
+        if (!dashboardGrid) return;
         dashboardGrid.innerHTML = '';
 
         for (var i = 0; i < pontos.length; i++) {
@@ -146,10 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /* ============================================
-       Função: Criar Card Individual
-       Retorna um elemento DOM com dados do ponto
-       ============================================ */
+    // Monta a estrutura HTML interna de cada card individualmente
     function criarCard(ponto) {
         var card = document.createElement('div');
         card.className = 'card';
@@ -188,23 +206,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return card;
     }
 
-    /* ============================================
-       Função: Calcular Nível de Risco
-       Analisa temperatura, umidade, vento e chuva
-       ============================================ */
+    // Sistema de pontuação baseado em limites críticos para avaliar o risco ambiental
     function calcularRisco(clima) {
         var riscoPontos = 0;
 
-        if (clima.temperatura > 30) riscoPontos = riscoPontos + 2;
-        if (clima.temperatura > 35) riscoPontos = riscoPontos + 2;
+        if (clima.temperatura > 30) riscoPontos += 2;
+        if (clima.temperatura > 35) riscoPontos += 2;
 
-        if (clima.umidade < 40) riscoPontos = riscoPontos + 2;
-        if (clima.umidade < 20) riscoPontos = riscoPontos + 2;
+        if (clima.umidade < 40) riscoPontos += 2;
+        if (clima.umidade < 20) riscoPontos += 2;
 
-        if (clima.velocidadeVento > 20) riscoPontos = riscoPontos + 2;
-        if (clima.velocidadeVento > 30) riscoPontos = riscoPontos + 2;
+        if (clima.velocidadeVento > 20) riscoPontos += 2;
+        if (clima.velocidadeVento > 30) riscoPontos += 2;
 
-        if (clima.precipitacao < 1) riscoPontos = riscoPontos + 1;
+        if (clima.precipitacao < 1) riscoPontos += 1;
 
         if (riscoPontos <= 3) {
             return { classe: 'risk-low', texto: 'Risco Baixo', emoji: '✅' };
@@ -215,27 +230,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /* ============================================
-       Função: Atualizar Dados
-       Recarrega informações climáticas dos pontos
-       ============================================ */
+    // Reseta a lista atual e dispara a atualização em lote
     function atualizarDados() {
         mostrarCarregamento(true);
         limparErros();
 
-        // FIX: salva cópia dos pontos antes de zerar o array
         var pontosParaAtualizar = monitoredPoints.slice();
         monitoredPoints = [];
 
-        // FIX: passa a cópia dos pontos para a função sequencial
         atualizarPontosSequencial(pontosParaAtualizar, 0);
     }
 
-    /* ============================================
-       Função: Atualizar Pontos Sequencialmente
-       ============================================ */
+    // Atualiza as informações meteorológicas sem precisar reconsultar a geolocalização
     function atualizarPontosSequencial(pontos, indice) {
-        // FIX: itera sobre a cópia salva, não o array zerado
         if (indice >= pontos.length) {
             exibirDashboard(monitoredPoints);
             mostrarCarregamento(false);
@@ -245,13 +252,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var pontoAtual = pontos[indice];
 
         obterDadosClimaticos(pontoAtual.lat, pontoAtual.lon, function(novoClima) {
-            // Reinserir ponto com clima atualizado
-            monitoredPoints.push({
-                nome: pontoAtual.nome,
-                lat: pontoAtual.lat,
-                lon: pontoAtual.lon,
-                clima: novoClima
-            });
+            if (novoClima !== null) {
+                monitoredPoints.push({
+                    nome: pontoAtual.nome,
+                    lat: pontoAtual.lat,
+                    lon: pontoAtual.lon,
+                    clima: novoClima
+                });
+            }
 
             setTimeout(function() {
                 atualizarPontosSequencial(pontos, indice + 1);
@@ -259,26 +267,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    /* ============================================
-       Funções Auxiliares
-       ============================================ */
-
+    // Funções de controle de estado visual da interface
     function mostrarCarregamento(visivel) {
-        if (visivel) {
-            loadingIndicator.style.display = 'block';
-        } else {
-            loadingIndicator.style.display = 'none';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = visivel ? 'block' : 'none';
         }
     }
 
     function mostrarErro(mensagem) {
-        errorMessage.textContent = mensagem;
-        errorMessage.style.display = 'block';
+        if (errorMessage) {
+            errorMessage.textContent = mensagem;
+            errorMessage.style.display = 'block';
+        }
     }
 
     function limparErros() {
-        errorMessage.textContent = '';
-        errorMessage.style.display = 'none';
+        if (errorMessage) {
+            errorMessage.textContent = '';
+            errorMessage.style.display = 'none';
+        }
     }
 
-}); // fim do DOMContentLoaded
+});
