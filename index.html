@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenSense - Monitoramento da Mata Atlântica</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Cabeçalho global com logo, título e descrição -->
+    <header>
+        <div class="header-content">
+            <h1>🌿 GreenSense</h1>
+            <p>Monitoramento Remoto de Áreas de Vegetação - Mata Atlântica</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Seção de informações e filtros -->
+        <section id="info-section">
+            <div class="info-container">
+                <h2>Dashboard de Sensoriamento Climático</h2>
+                <p>Visualize as condições meteorológicas em tempo real de 10 pontos monitorados da Mata Atlântica.</p>
+                <!-- Botão para carregar/atualizar dados -->
+                <button id="loadBtn" class="btn-primary">Carregar Dados Climáticos</button>
+                <button id="refreshBtn" class="btn-secondary" style="display: none;">Atualizar Dados</button>
+            </div>
+        </section>
+
+        <!-- Indicador de carregamento -->
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <p>⏳ Carregando dados dos sensores...</p>
+        </div>
+
+        <!-- Grid principal com cards dos pontos monitorados -->
+        <section id="dashboard-grid" class="dashboard-grid">
+            <!-- Cards serão inseridos aqui dinamicamente pelo JavaScript -->
+        </section>
+
+        <!-- Mensagem de erro (se houver) -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer>
+        <p>&copy; 2026 GreenSense | Proteção da Mata Atlântica | Dados via OpenStreetMap e Open-Meteo</p>
+    </footer>
+
+    <!-- Inclusão do JavaScript principal -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>
