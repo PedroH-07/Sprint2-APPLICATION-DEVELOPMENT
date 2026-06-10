@@ -1,0 +1,285 @@
+/* Paleta de cores para tema de vegetação e natureza */
+:root {
+    --forest-green: #1b5e20;
+    --leaf-green: #2e7d32;
+    --light-green: #4caf50;
+    --sky-blue: #1e88e5;
+    --cloud-white: #f5f5f5;
+    --text-dark: #212121;
+    --text-light: #757575;
+    --accent-orange: #ff6f00;
+    --danger-red: #c62828;
+    --success-green: #00c853;
+}
+
+/* Reset universal e configuração padrão */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    color: var(--text-dark);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cabeçalho da página */
+header {
+    background: linear-gradient(135deg, var(--forest-green) 0%, var(--leaf-green) 100%);
+    color: white;
+    padding: 2rem 1rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Conteúdo principal */
+main {
+    flex: 1;
+    padding: 2rem 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Seção de informações e controles */
+#info-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#info-section h2 {
+    color: var(--forest-green);
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+#info-section p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+/* Botões principais */
+.btn-primary, .btn-secondary {
+    padding: 0.8rem 1.6rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 1rem;
+}
+
+.btn-primary {
+    background: var(--light-green);
+    color: white;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-primary:hover {
+    background: var(--leaf-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.btn-secondary {
+    background: var(--sky-blue);
+    color: white;
+    box-shadow: 0 2px 8px rgba(30, 136, 229, 0.3);
+}
+
+.btn-secondary:hover {
+    background: #1565c0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4);
+}
+
+/* Indicador de carregamento */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: var(--forest-green);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Grid do dashboard */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Card individual de ponto monitorado */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border-left: 6px solid var(--light-green);
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Título do card (nome do local) */
+.card-title {
+    font-size: 1.3rem;
+    color: var(--forest-green);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+/* Coordenadas geográficas */
+.card-coordinates {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    font-family: monospace;
+}
+
+/* Container de dados meteorológicos */
+.weather-data {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Item individual de dado meteorológico */
+.weather-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    background: var(--cloud-white);
+    border-radius: 8px;
+    border-left: 4px solid var(--sky-blue);
+}
+
+.weather-label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.weather-value {
+    font-size: 1.1rem;
+    color: var(--leaf-green);
+    font-weight: bold;
+}
+
+/* Status de risco baseado em condições */
+.risk-status {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.risk-low {
+    background: #c8e6c9;
+    color: var(--forest-green);
+}
+
+.risk-medium {
+    background: #ffe0b2;
+    color: var(--accent-orange);
+}
+
+.risk-high {
+    background: #ffcdd2;
+    color: var(--danger-red);
+}
+
+/* Mensagem de erro */
+.error-message {
+    background: #ffcdd2;
+    color: var(--danger-red);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--danger-red);
+    font-weight: 500;
+}
+
+/* Rodapé */
+footer {
+    background: var(--forest-green);
+    color: white;
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    font-size: 0.95rem;
+}
+
+/* Responsividade para tablets */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+}
+
+/* Responsividade para celulares */
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    header p {
+        font-size: 0.95rem;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-primary, .btn-secondary {
+        display: block;
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    #info-section {
+        padding: 1rem;
+    }
+}
